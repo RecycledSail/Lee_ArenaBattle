@@ -101,3 +101,44 @@ RootComponent 변수는 액터를 대표하는 루트 컴포넌트, Comp1->Setup
 6. 액터와 에디터 연동
 - UPROPERTY(VisibleAnywhere)<br>
 디테일 윈도우에서 컴포넌트의 속성을 편집하기 위해서 필요한 것<br><br>
+
+7. 액터 기능의 확장
+- Comp1->SetRelativeLocation(FVector)<br> 
+컴포넌트의 기본 위치 값을 변경<br>
+(F 접두사 클래스 : 언리얼 오브젝트가 아닌 일반 C++ 클래스/구조체)
+
+- UPointLightComponent : 조명 기능
+- UParticleSystemComponent : 이펙트 기능<br><br>
+
+8. 객체 유형과 값 유형<br>
+- 언리얼 오브젝트의 속성 값
+  - 객체 유형 : 객체를 관리 (클래스의 포인터)
+  - 값 유형 : 값을 관리 (하단)
+- 언리얼 엔진이 제공하는 대표적인 값 유형
+  - 바이트 : uint8
+  - 정수 : int32
+  - 실수 : float
+  - 문자열 : FString, FName
+  - 구조체 : FVector, FRotator, FTransform
+  
+- VisibleAnywhere의 문제:<br>
+객체를 볼 수 있지만, 해당 객체를 다른 것으로 변경 불가 -> 객체에 속한 속성들은 변경 가능<br>
+당연히 값 유형도 VisibleAnywhere로 데이터 변경 불가
+- EditAnywhere : 속성의 데이터를 변경할 때 사용하는 키워드
+- Category=분류명 : 분류명으로 값이 분류됨
+
+9. 에셋의 지정
+- 에셋 불러들이기:
+  1. 고유한 키 값 파악
+  2. 에셋을 관리하는 시스템에 키 값으로 질의 (키 = 경로 값)
+  3. 에셋의 포인터를 가져옴
+- 복사한 레퍼런스 정보 {오브젝트 타입}'{폴더명}/{파일명}.{에셋명}:
+  - 오브젝트 타입 : 에셋의 타입을 명시적으로 지정
+  - 폴더/파일명 : 물리적인 디스크에 위치한 에셋의 경로 정보, 다른 에셋과 중복 X
+  - 에셋명 : 에디터에서 보여지는 에셋의 이름, 중복 O
+- ConstructorHelpers::FObjectFinder<ObjType>Vari1(TEXT("Dir"))<br>
+Dir 경로에 있는 ObjType 타입인 에셋을 불러와 Vari1 변수로 선언
+- Vari1.Object : 에셋에 대한 포인터
+- Vari1.Succeeded() : 불러오기 성공 여부
+- Comp1->SetStaticMesh(Vari1.Object) : StaticMesh 컴포넌트에 불러온 에셋을 로딩
+- Comp1->SetTemplate(Vari1.Object) : 이펙트 에셋 로딩할 때 SetStaticMesh 대신에 사용
