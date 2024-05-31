@@ -125,7 +125,7 @@ RootComponent 변수는 액터를 대표하는 루트 컴포넌트, Comp1->Setup
 객체를 볼 수 있지만, 해당 객체를 다른 것으로 변경 불가 -> 객체에 속한 속성들은 변경 가능<br>
 당연히 값 유형도 VisibleAnywhere로 데이터 변경 불가
 - EditAnywhere : 속성의 데이터를 변경할 때 사용하는 키워드
-- Category=분류명 : 분류명으로 값이 분류됨
+- Category=분류명 : 분류명으로 값이 분류됨<br><br>
 
 9. 에셋의 지정
 - 에셋 불러들이기:
@@ -141,4 +141,77 @@ Dir 경로에 있는 ObjType 타입인 에셋을 불러와 Vari1 변수로 선�
 - Vari1.Object : 에셋에 대한 포인터
 - Vari1.Succeeded() : 불러오기 성공 여부
 - Comp1->SetStaticMesh(Vari1.Object) : StaticMesh 컴포넌트에 불러온 에셋을 로딩
-- Comp1->SetTemplate(Vari1.Object) : 이펙트 에셋 로딩할 때 SetStaticMesh 대신에 사용
+- Comp1->SetTemplate(Vari1.Object) : 이펙트 에셋 로딩할 때 SetStaticMesh 대신에 사용<br><br>
+
+## Chapter 3
+
+### What I learned
+1. 로깅 환경의 설정
+- UE_LOG(카테고리, 로깅 수준, 형식 문자열, 인자..)
+  - 로그 카테고리 : 모든 로그에 지정된 분류를 위한 카테고리, 기능마다 로그를 구분하는데 사용
+  - 로깅 수준 : Log(흰색), Warning(노란색), Error(붉은색) 세 가지로 나뉨
+    - 로그 필터 : 출력 로그 윈도우에 있는 기능, 로깅 수준 + 카테고리로 필터
+  - 형식 문자열 : 다양한 데이터를 하나의 문자열로 조합해 출력<br>
+  문자열 정의 시 TEXT 매크로를 사용하는 것이 좋음<br>
+  문자열 정보를 받아오려면 \* 연산자가 필요 (\*GetName())
+  
+- DEFINE_LOG_CATEGORY_EXTERN(Category1, Log/Warning/Error, All) -> header 파일
+- DEFINE_LOG_CATEGORY(Category1) -> c++ 파일, #include 아래<br>
+이 이후에 UE_LOG에 정의한 Custom Category 지정 가능
+- #define으로 함수 이름과 코드 라인을 함께 출력하도록 매크로 제작 가능
+
+2. 어설션
+- check : 조건을 통과하지 못하면 크래시 화면을 띄움
+- ensure : 가볍게 경고만 내리는 어설션
+
+3. 액터의 주요 이벤트 함수
+액터는 준비, 게임 참여, 퇴장의 과정을 거침<br>
+- virtual void PostInitializeComponents() : 액터에 속한 컴포넌트의 세팅이 완료될 때 호출함
+- virtual void BeginPlay() : 액터가 게임에 참여할 때 호출됨
+- virtual void Tick() : 매 프레임마다 호출
+- virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) : 액터가 게임에서 퇴장할 때 호출
+액터의 이벤트 함수들은 가상 함수로 선언되어 있음<br>
+
+4. 움직이는 액터의 설계
+- 액터의 Tick 함수를 이용해 액터의 움직임을 구현할 수 있음<br>
+이전 렌더링 프레임 ~ 현재 렌더링 프레임까지 소요된 시간은 Tick의 인자인 DeltaSeconds로 알 수 있음<br>
+렌더링 프레임은 레벨의 복잡도+컴퓨터 성능 불규칙하게 동작 -> DeltaSeconds 값도 불규칙<br>
+- 데이터 은닉을 고려한 설계 방식으로 변수를 생성해야 함
+  - UPROPERTY 매크로에 AllowPrivateAccess META 키워드 추가하면 에디터에서 편집 + 변수 데이터 은닉 가능 -> 캡슐화 가능해짐
+  - UPROPERTY 매크로 구문 안 키워드 값은 C++ 언어 문법이 아닌 언리얼 엔진의 문법 -> 언리얼 헤더 툴이라는 프로그램으로 분석<br>
+  generated라는 이름의 추가 코드를 자동으로 생성 -> generated 코드까지 묶어서 소스 코드를 컴파일하면 실행환경이 이를 사용<br>
+  언리얼 헤더툴이 생성하는 코드는 Intermediate 폴더에 저장 -> 자동 변경되므로 수정 불가
+- 회전에는 FRotator 사용
+  - Pitch: Y축 회전
+  - Yaw: Z축 회전
+  - Roll: X축 회전
+- 언리얼 엔진에서 시간을 관리하는 주체는 월드, TimeManager가 있음
+  - Tick 함수가 아닌 곳에서 프레임 시간을 가져올 때는 GetWorld()->GetDeltaSeconds() 함수를 쓸 수 있음
+  - GetWorld()->GetTimeSeconds(): 게임 시작 후 현재까지 경과된 시간
+  - GetWorld()->GetUnpausedTimeSeconds(): 게임을 중지한 시간을 제외한 경과시간
+  - GetWorld()->GetRealTimeSeconds(): 현실 세계의 경과 시간
+  - GetWorld()->GetAudioTimeSeconds(): 게임을 중지한 시간을 제외한 현실세계의 경과시간
+
+5. 무브먼트 컴포넌트의 활용
+- 언리얼 엔진에서는 움직임 요소를 분리해 액터랑 별도로 관리하도록 프레임워크 -> 무브먼트 컴포넌트
+  - 무브먼트 컴포넌트는 액터의 움직임을 책임짐<br>
+  액터는 무브먼트 컴포넌트가 제공하는 이동 매커니즘에 따라 움직임<br>
+  Tick 함수를 구현하지 않아도 동일하게 움직이는 액터 제작 가능
+- 언리얼 엔진에서 제공하는 무브먼트 컴포넌트
+  - FloatingPawnMovement: 중력의 영향을 받지 않는 액터의 움직임을 제공, 입력에 따라 자유롭게 움직이도록
+  - RotatingMovement: 지정한 속도로 액터를 회전
+  - InterpMovement: 지정한 위치로 액터를 이동
+  - ProjectileMovement: 액터에 중력의 영향을 받아 포물선을 그리는 발사체의 움직임을 제공<br>
+  총알/미사일등에 사용
+  
+6. 프로젝트의 재구성
+- 언리얼 엔진에서 액터의 제거 메뉴는 제공하지 않음, 수동제거 필요
+  1. .vs, Binaries, Intermediate, ArenaBattle.sln 파일 제거
+  2. uproject를 우클릭하고 Generate Visual Studio project files 메뉴를 선택 -> 자동으로 솔루션 생성
+  3. 솔루션 컴파일 진행 시 Binaries 폴더 생성, 빌드가 완료되면 해당 폴더에 DLL 파일 생성
+    - 언리얼 빌드 툴이라는 프로그램을 가동시키기 때문<br>
+    C++ Source 폴더를 분석하면서 솔루션 파일을 게임 프로젝트 폴더에 생성 + 솔루션 파일에서 참조해야 하는 프로젝트 파일은 Intermediate 폴더의 ProjectFiles 폴더에 생성
+- 액터 제거하려면 Source 폴더에서 관련 파일을 지우고 (Fountain.h, Fountain.cpp) Generate Visual Studio project files
+
+
+
