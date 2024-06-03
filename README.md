@@ -213,5 +213,46 @@ Dir 경로에 있는 ObjType 타입인 에셋을 불러와 Vari1 변수로 선�
     C++ Source 폴더를 분석하면서 솔루션 파일을 게임 프로젝트 폴더에 생성 + 솔루션 파일에서 참조해야 하는 프로젝트 파일은 Intermediate 폴더의 ProjectFiles 폴더에 생성
 - 액터 제거하려면 Source 폴더에서 관련 파일을 지우고 (Fountain.h, Fountain.cpp) Generate Visual Studio project files
 
+## Chapter 4
 
+### What I learned
+1. 게임 모드
+- 게임 규칙: 플레이어에게 보이지 않는, 실체가 없는 무형적인 요소<br>
+게임플레이 중 다양한 사건사고가 발생할 때 게임 진행에 참고해야 하는 핵심 요소, 심판에 해당
+  - 아군이 발사한 총알에 맞을 때 데미지를 받을지 말지 등의 규칙
+  - 게임의 틀을 잡아주는 역할도 함: 입장할 때마다 플레이어를 점검하고 액터를 생성해 전달하는 역할도 함
+- 폰(Pawn): 플레이어가 조종할 수 있는 액터
+- 프로젝트 설정
+  - 맵 & 모드: 시작 레벨 설정 가능
+  - Selected GameMode
+    - Default Pawn Class: 게임에 입장한 플레이어에게 주어질 조종할 수 있는 액터, 폰의 타입을 지정하는 곳
+- 게임모드 적용: 세팅 > 월드 세팅 > Game Mode > GameMode Override > 만든 게임모드 선택
 
+2. 플레이어의 입장
+플레이어가 입장하면 게임 모드는 플레이어에게 폰을 배정해 줌<br>
+거기에 PlayerController라는 특별한 액터도 함께 배정
+- 플레이어 컨트롤러(PlayerController): 게임 세계에서 현실 세계의 플레이어를 대변하는 무형의 액터
+  - 게임 세계에서 플레이어와 1:1로 소통하면서 폰을 조종하는 역할
+  - 플레이어가 입장할 때 배정, 배정된 플레이어 컨트롤러는 변경 불가
+- 폰(Pawn): 플레이어 컨트롤러에게 조종당하는 액터
+  - 플레이어 컨트롤러가 시키는 대로 움직이는 꼭두각시
+  - 게임 세계에서 실제로 보여지고 레벨과 물리적인 충돌을 하면서 기획자가 배치한 액터와 상호작용
+  - 플레이어 컨트롤러를 통해 현재 조종중인 폰을 버리고 다른 폰으로 옮겨가 조종할 수 있음
+  
+- 플레이 버튼을 누른다는 것은 만들고 있는 게임에 제작자 플레이어가 입장하는 것<br>
+게임모드에 의해 아래 순서로 관련 액터들이 생성 및 게임플레이 설정이 갖춰짐
+  1. 플레이어 컨트롤러 생성
+  2. 플레이어 폰 생성
+  3. 플레이어 컨트롤러가 플레이어 폰 빙의
+  4. 게임 시작
+
+- 로그인(Login): 플레이어가 게임에 입장하는 것
+  - 로그인 과정에서 플레이어에게 할당할 플레이어 컨트롤러가 생성됨
+- PostLogin 이벤트 : 로그인을 완료하면 호출되는 이벤트 함수<br>
+PostLogin 함수 내부에서 플레이어가 조종할 폰을 생성하고 플레이어 컨트롤러가 해당 폰에 빙의하는 작업이 이루어짐
+  - 폰/컨트롤러 플레이어가 생성되는 시점은 각 액터의 PostInitializeComponents 함수로 파악할 수 있음
+  - 빙의를 진행하는 시점은 플레이어 컨트롤러: Possess, 폰: PossessedBy 함수로 파악할 수 있음
+  - virtual void OnPossess(APawn \*aPawn) override: Possess 함수 대신에 사용 가능
+- Pawn의 Auto Possess Player 속성: 레벨에 이미 배치되어 있는 폰에 플레이어 컨트롤러가 빙의 가능
+- C++로 제작된 폰이 아닌 블루프린트로 제작된 폰을 기본 폰으로 사용하려면 블루프린트 에셋의 클래스 정보를 넘겨주면 동일하게 사용 가능<br>
+ex) static ConstructorHelpers::FClassFinder<APawn> BP_PAWN_C(TEXT("/Game/ThirdPersonBP/Blueprints/ThirdPersonCharacter.ThirdPersonCharacter_C"));
