@@ -2,7 +2,7 @@
 
 ## Chapter 1
 
-### What I learned
+### What I've learned
 
 1. 기초적인 에디터 UI
 2. 새 C++ 클래스 생성
@@ -12,7 +12,7 @@
 
 ## Chapter 2
 
-### What I learned
+### What I've learned
 
 1. 월드<br>
 뷰포트에 보이는 작업 공간은 컴퓨터 안의 가상 세계 -> 월드라고 부름<br>
@@ -145,7 +145,7 @@ Dir 경로에 있는 ObjType 타입인 에셋을 불러와 Vari1 변수로 선�
 
 ## Chapter 3
 
-### What I learned
+### What I've learned
 1. 로깅 환경의 설정
 - UE_LOG(카테고리, 로깅 수준, 형식 문자열, 인자..)
   - 로그 카테고리 : 모든 로그에 지정된 분류를 위한 카테고리, 기능마다 로그를 구분하는데 사용
@@ -215,7 +215,7 @@ Dir 경로에 있는 ObjType 타입인 에셋을 불러와 Vari1 변수로 선�
 
 ## Chapter 4
 
-### What I learned
+### What I've learned
 1. 게임 모드
 - 게임 규칙: 플레이어에게 보이지 않는, 실체가 없는 무형적인 요소<br>
 게임플레이 중 다양한 사건사고가 발생할 때 게임 진행에 참고해야 하는 핵심 요소, 심판에 해당
@@ -256,3 +256,60 @@ PostLogin 함수 내부에서 플레이어가 조종할 폰을 생성하고 플�
 - Pawn의 Auto Possess Player 속성: 레벨에 이미 배치되어 있는 폰에 플레이어 컨트롤러가 빙의 가능
 - C++로 제작된 폰이 아닌 블루프린트로 제작된 폰을 기본 폰으로 사용하려면 블루프린트 에셋의 클래스 정보를 넘겨주면 동일하게 사용 가능<br>
 ex) static ConstructorHelpers::FClassFinder<APawn> BP_PAWN_C(TEXT("/Game/ThirdPersonBP/Blueprints/ThirdPersonCharacter.ThirdPersonCharacter_C"));
+
+## Chapter 5
+
+### What I've learned
+1. 폰의 구성 요소
+- 폰: 움직이는 액터 + 조종당하는 기능, 자동차도 될 수 있고 비행기도 될 수 있음
+- 인간형 폰을 제작할 시 고려할 요소
+  - 시각적 요소: 인간형 폰이 되려면 애니메이션 기능이 필요<br>
+  스켈레탈 메시: 애니메이션을 재생하도록 리깅(Rigging) 데이터를 추가한 메시 -> 이를 관리하는 컴포넌트는 스켈레탈 메시 컴포넌트
+  - 충돌 요소: 스켈레탈 메시는 에니메이션에 따라 변하므로 충돌을 담당할 충돌 컴포넌트를 별도로 사용 -> 인간은 캡슐 컴포넌트를 사용
+  - 움직임 요소: 언리얼 엔진은 플레이어의 입력에 따라 폰이 움직이는 폰 무브먼트 컴포넌트라고 부르는 특수 컴포넌트를 제공<br>
+  FloatingPawnMovement와 CharacterMovement라는 두 가지 폰 무브먼트 컴포넌트를 제공
+  - 네비게이션: 폰은 목적지를 알려주면 스스로 목적지까지 이동하는 길 찾기 기능을 가지고 있음
+  - 카메라 출력: 플레이어가 조종하는 폰은 플레이어 입력 해석으로 이동 + 자신이 보는 게임세계를 플레이어 모니터에 전송해줘야 함<br>
+  폰에 카메라 컴포넌트를 부착하면 플레이어 컨트롤러가 폰에 빙의할 때 폰에 부착된 카메라 상을 플레이어 화면으로 전송
+- 폰 컴포넌트:
+  - Capsule: 폰의 움직임을 담당하는 충돌 컴포넌트<br>
+  충돌 영역은 캐릭터 메시가 쏙 들어갈 만큼의 크기로 보통 설정<br>
+  폰을 대표해 게임 세계에서의 움직임을 담당할 예정이므로 루트 컴포넌트로 설정
+  - SkeletalMesh: 캐릭터 에셋을 보여주고 추가로 애니메이션도 담당<br>
+  언리얼 엔진에서 액터의 기준 위치는 정중앙 위치 but 캐릭터 에셋은 주로 발바닥에 기준 위치를 잡음 -> Z축으로 절반만큼 내려줘야 함
+  - FloatingPawnMovement: 플레이어의 입력에 따라 캐릭터가 움직이도록 설정해주는 컴포넌트<br>
+  중력을 고려하지 않은 간단한 움직임을 구현할 수 있음
+  - SpringArm: 3인칭 시점으로 카메라 구도를 편하게 설정할 수 있는 부가 컴포넌트
+  - Camera: 폰에 카메라 컴포넌트를 부착하면 언리얼 엔진은 카메라가 바라보는 게임 세계의 화면을 플레이어의 화면으로 전송
+  
+2. 폰의 조작
+플레이어의 입력은 언리얼 엔진이 제공하는 가상 입력 설정을 사용하면 다양한 기기와 멀티플랫폼에 대응할 수 있다<br>
+프로젝트 세팅 -> 입력 설정에서 지정할 수 있으며, Bindings 섹션에서 Action Mappings/Axis Mappings라는 두 가지 입력 설정 항목을 볼 수 있다<br>
+Axis Mapping은 조이스틱 레버를 의미하고 Action Mapping은 조이스틱 버튼을 의미한다.
+- Axis Mappings: 조이스틱 레버의 신호를 설정하는 곳, 언리얼 엔진은 레버가 중립 위치에 있으면 0, 끝 위치에 있으면 -1~1을 게임 로직에 전달<br>
+MoveRight의 경우 A를 누르면 -1, D를 누르면 1이 발생하고 아무 키도 누르지 않으면 0이 지속적으로 발생
+- Action Mappings: 조이스틱 버튼의 신호를 설정하는 곳, Axis Mappings와 달리 언리얼 엔진은 버튼을 눌렀을 때/뗄 때만 신호를 전달
+- InputComponent: 입력 설정을 처리하기 위한 언리얼 오브젝트, 신호를 받는 BindAxis와 BindAction 함수를 제공
+  - SetupInputComponent(UInputComponent \*PlayerInputComponent): 폰의 멤버 함수와 입력 설정을 Binding하는 함수
+    - PlayerInputComponent->BindAxis(TEXT("UpDown"), this, &AABPawn::UpDown): UpDown을 AABPawn::UpDown에 Bind
+- AddMovementInput: -1~1의 입력 값을 폰 무브먼트 컴포넌트에 전달해서 폰을 움직이게 함, 추가로 이동할 방향을 WorldDirection(벡터)에 지정해야 함
+  - Scale: 1 전진, -1 후진, 0 중립
+  - GetActorForwardVector(): 앞벡터
+  - GetActorRightVector(): 오른쪽 벡터
+  
+\* 폰을 조종하기 위한 입력 로직은 폰 클래스에 구현하는 것이 일반적이다. 다만 언리얼 엔진의 입력 시스템은 중간에 플레이어 컨트롤러를 거쳐서 폰에 전달된다<br>
+플레이어 컨트롤러에 특정 입력을 처리하는 코드를 구현하면 해당 입력은 플레이어 컨트롤러에서 필터링되어 폰에 전달되지 않는다.
+
+- FInputModeGameOnly InputMode + SetInputMode(InputMode): 플레이어 컨트롤러에게 UI를 배제하고 게임에게만 입력을 전달하도록 명령을 내림
+
+3. 애니메이션의 설정
+스켈레탈메시에 애니메이션을 설정<br>
+- 애니메이션 임포트: 콘텐츠 브라우저에서 폴더 생성 -> 폴더 선택 후 임포트 버튼을 눌러 에셋 파일 선택 -><br>
+Mesh->Skeleton에서 스켈레톤 선택 -> 임포트<br>
+확인: 애니메이션 더블클릭해서 확인
+
+애니메이션은 코드로 하기에 한계가 있음 -> 애니메이션 블루프린트
+- 애님 그래프: 애니메이션 블루프린트에서 애니메이션을 설계하는 작업 환경
+
+애니메이션 시스템은 C++ 프로그래밍의 애님 인스턴스(Anim Instance)라는 클래스로 관리<br>
+스켈레탈 메시 컴포트는 관리하는 캐릭터의 애니메이션을 애님 인스턴스에 위임<br>

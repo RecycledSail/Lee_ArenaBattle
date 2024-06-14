@@ -14,6 +14,9 @@ class LEE_ARENABATTLE_API AABPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 	
+protected:
+	virtual void BeginPlay() override;
+
 public:
 	virtual void PostInitializeComponents() override;
 	virtual void Possess(APawn* aPawn) override;
