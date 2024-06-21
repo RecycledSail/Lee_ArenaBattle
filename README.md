@@ -2,7 +2,7 @@
 
 ## Chapter 1
 
-### What I've learned
+### What have I learned
 
 1. 기초적인 에디터 UI
 2. 새 C++ 클래스 생성
@@ -12,7 +12,7 @@
 
 ## Chapter 2
 
-### What I've learned
+### What have I learned
 
 1. 월드<br>
 뷰포트에 보이는 작업 공간은 컴퓨터 안의 가상 세계 -> 월드라고 부름<br>
@@ -145,7 +145,7 @@ Dir 경로에 있는 ObjType 타입인 에셋을 불러와 Vari1 변수로 선�
 
 ## Chapter 3
 
-### What I've learned
+### What have I learned
 1. 로깅 환경의 설정
 - UE_LOG(카테고리, 로깅 수준, 형식 문자열, 인자..)
   - 로그 카테고리 : 모든 로그에 지정된 분류를 위한 카테고리, 기능마다 로그를 구분하는데 사용
@@ -215,7 +215,7 @@ Dir 경로에 있는 ObjType 타입인 에셋을 불러와 Vari1 변수로 선�
 
 ## Chapter 4
 
-### What I've learned
+### What have I learned
 1. 게임 모드
 - 게임 규칙: 플레이어에게 보이지 않는, 실체가 없는 무형적인 요소<br>
 게임플레이 중 다양한 사건사고가 발생할 때 게임 진행에 참고해야 하는 핵심 요소, 심판에 해당
@@ -259,7 +259,7 @@ ex) static ConstructorHelpers::FClassFinder<APawn> BP_PAWN_C(TEXT("/Game/ThirdPe
 
 ## Chapter 5
 
-### What I've learned
+### What have I learned
 1. 폰의 구성 요소
 - 폰: 움직이는 액터 + 조종당하는 기능, 자동차도 될 수 있고 비행기도 될 수 있음
 - 인간형 폰을 제작할 시 고려할 요소
@@ -313,3 +313,66 @@ Mesh->Skeleton에서 스켈레톤 선택 -> 임포트<br>
 
 애니메이션 시스템은 C++ 프로그래밍의 애님 인스턴스(Anim Instance)라는 클래스로 관리<br>
 스켈레탈 메시 컴포트는 관리하는 캐릭터의 애니메이션을 애님 인스턴스에 위임<br>
+
+## Chapter 6
+
+### What have I learned
+
+1. 캐릭터 모델
+- Character(캐릭터): 인간형 폰을 효과적으로 제작하기 위한 특수한 모델
+  - 상속 구조: 만든 캐릭터 클래스 -> ACharacter -> APawn(Capsule, SkeletalMesh Component 포함, CharacterMovement로 움직임 관리)
+  - GetCapsuleComponent(), GetMesh(), GetCharacterMovement(): ACharacter의 Capsule, Mesh, Movement private 컴포넌트 포인터 접근용 함수
+  
+캐릭터는 CharacterMovement 컴포넌트를 사용 (<=> Pawn의 FloatingPawnMovement)
+- 장점:
+  1. 점프와 같은 중력 반영 움직임 제공
+  2. 기어가기, 날아가기, 수영등 다양한 이동모드 + 현재 움직임에 대한 더 많은 정보 제공
+  3. 멀티 플레이 네트워크 환경에서 자동으로 동기화
+  
+2. 컨트롤 회전의 활용
+플레이어가 게임에 입장할때 부여받는 두 액터: (1) 플레이어 컨트롤러, (2) 폰
+- 플레이어 컨트롤러: 물리적인 요소를 고려하지 않은, 플레이어의 의지에 관련된 데이터를 관리
+  - 컨트롤 회전: 플레이어의 의지를 나타냄
+    - Turn: 캐릭터의 Z축 회전 입력 설정
+	- LookUp: 캐릭터의 Y축 회전 입력 설정
+- 폰 게임 세계에서 캐릭터가 처한 물리적인 상황을 관리
+  - 속도: 폰의 이동 상태를 알려주는 중요한 데이터
+
+AddControllerPitchInput 넣어도 상하이동에 반응하지 않음<br>
+언리얼 엔진의 캐릭터 모델은 기본으로 컨트롤 회전의 Yaw값과 폰의 Yaw값이 연동되어 있음 (속성의 UseControllerRotationYaw)<br>
+이 때문에 좌우로 움직이면 Z축으로 회전하지만 마우스 상하이동이 폰에 영향 X
+
+3. 삼인칭 컨트롤 구현 (GTA 방식)
+블루프린트로 제작한 흰색 마네킹이 가지고 있는 설정
+- 캐릭터의 이동: 현재 보는 시점을 기준으로 상하좌우로 마네킹이 이동 but 카메라는 회전 X
+- 캐릭터의 회전: 캐릭터가 이동하는 방향으로 회전
+- 카메라 지지대 길이: 450cm
+- 카메라 회전: 마우스 상하좌우 이동에 따라 카메라 지지대가 상하좌우로 회전
+- 카메라 줌: 카메라 시선 - 캐릭터 사이에 장애물이 감지되면 캐릭터가 보이도록 장애물 앞으로 줌인
+
+- SpringArm 컴포넌트: 언리얼 엔진에서 삼인칭 시점의 카메라 설정을 구현할 때 사용할 수 있는 컴포넌트
+
+FRotator 데이터로부터 원하는 방향 값인 FVector 데이터를 얻어야 함<br>
+액터의 회전 (0,0,0) == 액터가 바라보는 방향이 월드 X축방향 (1,0,0) -> 월드의 X축방향: 기본 회전값애 대응하는 방향값<br>
+스프링암의 회전값은 컨트롤 회전값과 동일 -> 컨트롤 회전 값이 카메라가 바라보는 방향 -> 컨트롤 회전 값으로부터 회전행렬을 생성한 뒤 방향축을 대입해 움직일 방향을 가져올 수 있음
+- 언리얼 엔진에서 시선 방향: X축, 우측 방향 Y축
+- OrientRotationToMovement: 캐릭터를 움직이는 방향으로 자동 회전, 회전속도 지정 가능
+
+4. 삼인칭 컨트롤 구현 (디아블로 방식)
+디아블로의 조작 방식
+- 캐릭터의 이동: 상하좌우키 조합해 이동할 방향 결정
+- 캐릭터의 회전: 캐릭터는 입력한 방향으로 회전
+- 카메라 지지대 길이: 800cm
+- 카메라 회전: 카메라 회전 없이 고정 시선으로 45도
+- 카메라 줌: 없음 - 카메라와 캐릭터 사이 장애물이 있을 경우 외곽선으로 처리
+
+UPROPERTY를 사용하지 않는 FVector와 같은 값타입 변수는 항상 초기값을 미리 지정하는 것이 안전 -> 찾기 어려운 버그는 사소한 실수로부터 비롯<br>
+축 입력 이벤트가 발생할 때 새로 선언한 DirectionToMove 변수를 업데이트, 이후 발생하는 Tick 로직에서 최종 멤버 변수를 참고해 이동
+- 부드럽게 회전: UseControllerDesiredRotation (UserControllerRotationYaw 해제)
+
+5. 컨트롤 설정의 변경
+입력에 따라 컨트롤 방식을 변경하도록 기능 추가<br>
+ViewChange라는 액션 매핑을 추가 -> 해당 키가 눌릴때마다 SetControlMode에 다른 인자값이 들어가도록
+- BindAction: 액션 매핑 입력 설정과 연동하는 함수; 버튼이 눌렸는지(EInputEvent::IE_Pressed), 떼어졌는지(EInputEvent::IE_Released)에 대한 부가 인자 지정 가능
+- FMath::InterpTo: 지정한 속도로 목표 지점까지 진행하되 도달하면 그 값에서 멈추는 기능<br>
+float FInterpTo, Vector VInterpTo, Rotator RInterpTo 세 함수가 있음
